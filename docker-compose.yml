@@ -1,0 +1,50 @@
+version: "3.7"
+services:
+  monolith:
+    build:
+      context: ./monolith
+      dockerfile: ./Dockerfile.dev
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./monolith:/app
+    depends_on:
+      - rabbitmq
+  attendees_microservice:
+    build:
+      context: ./attendees_microservice
+      dockerfile: ./Dockerfile.dev
+    ports:
+      - "8001:8001"
+    volumes:
+      - ./attendees_microservice:/app
+  presentation_workflow:
+    build:
+      context: ./presentation_workflow
+      dockerfile: ./Dockerfile.dev
+    depends_on:
+      - rabbitmq
+    volumes:
+      - ./presentation_workflow:/app
+  rabbitmq:
+    image: rabbitmq:3
+  mail:
+    image: mailhog/mailhog
+    environment:
+      - MH_SMTP_BIND_ADDR=0.0.0.0:25
+    ports:
+      - "3000:8025"
+  attendees_account_info:
+    build:
+      context: ./attendees_microservice
+      dockerfile: ./Dockerfile.account_info.dev
+    volumes:
+      - ./attendees_microservice:/app
+
+# The monolith entry is the name of the service
+# The build entry tells Docker Compose how to build the image
+# The context entry tells Docker Compose what directory to look in to build stuff
+# The dockerfile entry tells Docker Compose what Dockerfile to use to build it
+# The ports entry is a list that tells Docker Compose to let us use the port 8000
+# The volumes entry is a list of mappings that we specify with the -v flag in the docker run
+# The depends_on tells us that this depends on another service named "rabbitmq", which we haven't added yet, and that monolith should not start until the rabbitmq service has already started
